@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chụp ảnh gửi Telegram</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, Arial, sans-serif;
+            text-align: center;
+            padding: 40px 20px;
+            background: #f0f2f5;
+            margin: 0;
+        }
+        h2 { color: #1a1a1a; }
+        button {
+            padding: 15px 35px;
+            font-size: 18px;
+            cursor: pointer;
+            background: #0088cc;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+        button:hover:not(:disabled) { background: #006699; transform: scale(1.05); }
+        button:disabled { background: #999; cursor: not-allowed; }
+        video {
+            border-radius: 12px;
+            margin-top: 20px;
+            background: #000;
+            max-width: 100%;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #333;
+            min-height: 24px;
+        }
+        .success { color: #22a06b !important; }
+        .error { color: #d93025 !important; }
+    </style>
+</head>
+<body>
+    <h2>📸 Chụp ảnh gửi Telegram</h2>
+    <p>Bấm nút bên dưới và bấm <b>Cho phép</b> khi trình duyệt hỏi.</p>
+
+    <button id="captureBtn">Chụp & Gửi ảnh</button>
+    <div id="status"></div>
+
+    <video id="video" width="320" height="240" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+    <script>
+        const btn = document.getElementById('captureBtn');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const status = document.getElementById('status');
+
+        btn.addEventListener('click', async () => {
+            try {
+                btn.disabled = true;
+                status.className = '';
+                status.textContent = '⏳ Đang xin quyền camera...';
+
+                // 1. Xin quyền và bật camera
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 320, height: 240 }
+                });
+                video.srcObject = stream;
+                video.style.display = 'block';
+
+                status.textContent = '📷 Camera đã bật. Chụp sau 2 giây...';
+
+                // 2. Đợi 2 giây rồi chụp
+                setTimeout(async () => {
+                    canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+                    const imageData = canvas.toDataURL('image/png');
+
+                    // Tắt camera
+                    stream.getTracks().forEach(t => t.stop());
+                    video.style.display = 'none';
+
+                    status.textContent = '📤 Đang gửi ảnh...';
+
+                    // 3. Gửi lên server
+                    const res = await fetch('/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: imageData })
+                    });
+                    const result = await res.json();
+
+                    if (result.success) {
+                        status.className = 'success';
+                        status.textContent = '✅ Đã gửi ảnh về Telegram!';
+                    } else {
+                        status.className = 'error';
+                        status.textContent = '❌ Lỗi: ' + (result.error || 'Không rõ');
+                    }
+                    btn.disabled = false;
+                    btn.textContent = 'Chụp lại';
+                }, 2000);
+
+            } catch (err) {
+                status.className = 'error';
+                status.textContent = '❌ Lỗi: ' + err.message;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
